@@ -24,5 +24,4 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ADD isp-data-pollution.py isp-data-pollution.py
 
-#PUR pyhon params into docker container variables
 ENTRYPOINT ["python3.7", "isp-data-pollution.py"]
