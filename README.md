@@ -6,7 +6,7 @@ In order to have it running on your Pi follow the instructions below:
 There are countless tutorials online on how to do that
 * Download the isp-data-pollution script and docker containers from the essandess repository
 ```
-git clone https://github.com/hvalev/isp-pollution-docker.git
+git clone https://github.com/essandess/isp-data-pollution.git
 git clone https://github.com/hvalev/isp-pollution-docker.git
 mv isp-pollution-docker/Dockerfile isp-pollution/Dockerfile
 ```
