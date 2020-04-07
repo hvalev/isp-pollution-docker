@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  isp-pollution:
+    container_name: isp-pollution
+    build:
+      dockerfile: /home/pi/isp-pollution/Dockerfile
+      context: /home/pi/isp-pollution/
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Amsterdam
+      - gbpm=300
+      - mem_lim=512
+    volumes:
+      - /home/pi/isp/:/home/pi/isp/
+    restart: always
