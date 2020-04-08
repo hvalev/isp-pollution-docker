@@ -3,8 +3,8 @@ services:
   isp-pollution:
     container_name: isp-pollution
     build:
-      dockerfile: /home/pi/isp-pollution/Dockerfile
-      context: /home/pi/isp-pollution/
+      dockerfile: Dockerfile
+      context: ./isp-pollution/
     environment:
       - PUID=1000
       - PGID=1000
