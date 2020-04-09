@@ -7,7 +7,7 @@ In order to have it running on your Pi follow the instructions below:
 * Build & run the container
 ```
 docker build isp-pollution --tag isp-pollution
-docker run -d --name isp-pollution isp-pollution 
+docker run -d -e gbpm=300 -e mem_lim=512 --name isp-pollution isp-pollution 
 ```
 * (Optional) You can also use the following docker-compose code:<br/>
 Note: Adjust your paths accordingly
