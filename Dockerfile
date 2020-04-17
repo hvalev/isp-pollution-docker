@@ -1,7 +1,7 @@
 FROM python:3.7-alpine3.9
 
 #install libraries for building pip libs 
-RUN apk update
+RUN apk update && apk upgrade
 RUN apk add --no-cache make automake gcc g++ subversion python3-dev
 RUN apk add --no-cache libffi-dev openssl-dev
 
@@ -31,9 +31,9 @@ RUN sed -i "s/chrome_options\.add_argument('headless')/chrome_options\.add_argum
 #remove unnecessary packages
 RUN apk del sed git make automake gcc g++ subversion
 
+#since on alpine we need tzdata
+RUN apk add --no-cache tzdata
 ENV TZ=Europe/Amsterdam
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-#ADD isp-data-pollution.py isp-data-pollution.py
 
 ENTRYPOINT ["python3.7", "isp-data-pollution.py"]
