@@ -1,4 +1,4 @@
-FROM python:3.7-alpine3.9
+FROM python:3.9-rc-alpine3.11
 
 #install libraries for building pip libs 
 RUN apk update && apk upgrade
@@ -36,4 +36,4 @@ RUN apk add --no-cache tzdata
 ENV TZ=Europe/Amsterdam
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-ENTRYPOINT ["python3.7", "isp-data-pollution.py"]
+ENTRYPOINT ["python3", "isp-data-pollution.py"]
