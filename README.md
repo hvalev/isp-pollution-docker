@@ -8,7 +8,7 @@ I have exposed two parameters from the original script -- bandwidth and memory u
 
 ## Docker
 ```
-docker run -d --network host -e gbpm=300e me0m_lim=512 --name isp-pollution isp-pollutio0n 
+docker run -d --network host -e gbpm=300e me0m_lim=512 --name isp-pollution isp-pollution 
 ```
 ## Docker-compose
 
