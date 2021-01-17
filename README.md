@@ -37,7 +37,7 @@ services:
 ## Info
 A built container can be found @ https://hub.docker.com/repository/docker/hvalev/isp-pollution and was tested on a raspberry pi 3b+ and 4.
 
-# How to build
+## How to build
 ```
 docker build https://github.com/hvalev/isp-pollution-docker.git --tag isp-pollution
 ```
