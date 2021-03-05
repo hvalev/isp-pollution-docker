@@ -1,4 +1,4 @@
 EasyProcess==0.3
 fake-useragent==0.1.11
-pyvirtualdisplay==2.0
+pyvirtualdisplay==2.1
 selenium==3.141.0
