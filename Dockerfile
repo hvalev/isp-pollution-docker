@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.16.3
 #selenium fake_useragent pyvirtualdisplay
 COPY requirements.txt ./
 #Download and expose isp-data-pollution variables to docker container and allow headless
