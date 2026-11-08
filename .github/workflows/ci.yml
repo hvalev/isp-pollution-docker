@@ -20,8 +20,9 @@ jobs:
 
       # Dependencies, lint, types and tests all come from the lock file, the
       # same lock the image installs from.
+      # Full tag: setup-uv publishes v10.3.x, not a floating v10 ref.
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
 
