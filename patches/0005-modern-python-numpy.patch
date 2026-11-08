@@ -1,0 +1,77 @@
+--- a/isp_data_pollution.py
++++ b/isp_data_pollution.py
+@@ -23,6 +23,7 @@
+ 
+ import argparse as ap, datetime as dt, importlib, numpy as np, numpy.random as npr, os, psutil, random, re, requests, signal, sys, tarfile, time, warnings as warn
+ import urllib.request, urllib.robotparser as robotparser, urllib.parse as uprs
++import importlib.util  # 'importlib' alone does not bind .util on modern Python
+ from selenium import webdriver
+ from selenium.webdriver.support.ui import WebDriverWait
+ from selenium.webdriver.common.by import By
+@@ -582,7 +583,7 @@
+     def domain_entropy(self):
+         result = 0.
+         domain_count = np.array([(dmn, len(self.domain_links[dmn])) for dmn in self.domain_links])
+-        p = np.array([np.float(c) for d, c in domain_count])
++        p = np.array([float(c) for d, c in domain_count])
+         count_total = p.sum()
+         if count_total > 0:
+             p = p / p.sum()
+@@ -761,7 +762,7 @@
+         urls = []
+         domain_array = np.array([dmn for dmn in self.domain_links])
+         domain_count = np.array([len(self.domain_links[domain_array[k]]) for k in range(domain_array.shape[0])])
+-        p = np.array([np.float(c) for c in domain_count])
++        p = np.array([float(c) for c in domain_count])
+         count_total = p.sum()
+         if log_sampling:  # log-sampling [log(x+1)] to bias lower count domains
+             p = np.fromiter((np.log1p(x) for x in p), dtype=p.dtype)
+@@ -772,12 +773,17 @@
+                 for k in range(cnts.shape[0]):
+                     domain = domain_array[k]
+                     cnt = min(cnts[k],domain_count[k])
+-                    for url in random.sample(self.domain_links[domain],cnt):
++                    # Python 3.11 requires a sequence here; the library stores sets.
++                    for url in random.sample(sorted(self.domain_links[domain]),cnt):
+                         urls.append(url)
+             else:
+-                k = int(np.nonzero(cnts)[0])
+-                domain = domain_array[k]
+-                url = random.sample(self.domain_links[domain],1)[0]
++                # numpy 2 dropped the implicit size-1 array -> scalar conversion
++                # this line used to rely on.
++                hits = np.nonzero(cnts)[0]
++                if hits.shape[0] == 0:
++                    return urls
++                domain = domain_array[int(hits[0])]
++                url = random.sample(sorted(self.domain_links[domain]),1)[0]
+                 urls.append(url)
+         return urls
+ 
+@@ -786,21 +792,22 @@
+         domain = None
+         domain_array = np.array([dmn for dmn in self.domain_links])
+         domain_count = np.array([len(self.domain_links[domain_array[k]]) for k in range(domain_array.shape[0])])
+-        p = np.array([np.float(c) for c in domain_count])
++        p = np.array([float(c) for c in domain_count])
+         count_total = p.sum()
+         if log_sampling:  # log-sampling [log(x+1)] to bias lower count domains
+             p = np.fromiter((np.log1p(x) for x in p), dtype=p.dtype)
+         if count_total > 0:
+             p = p/p.sum()
+             cnts = npr.multinomial(1, pvals=p)
+-            k = int(np.nonzero(cnts)[0])
+-            domain = domain_array[k]
++            hits = np.nonzero(cnts)[0]  # numpy 2: no implicit array -> scalar
++            if hits.shape[0] > 0:
++                domain = domain_array[int(hits[0])]
+         return domain
+ 
+     def draw_link_from_domain(self,domain):
+         """ Draw a single, random link from a specific domain. """
+         domain_count = len(self.domain_links.get(domain,set()))
+-        url = random.sample(self.domain_links[domain],1)[0] if domain_count > 0 else None
++        url = random.sample(sorted(self.domain_links[domain]),1)[0] if domain_count > 0 else None
+         return url
+ 
+     def pop_link(self,remove_link_fraction=0.95,current_preferred_domain_fraction=0.1):

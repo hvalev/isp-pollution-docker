@@ -1,4 +1,14 @@
-EasyProcess==0.3
-fake-useragent==0.1.13
-pyvirtualdisplay==2.2
-selenium==3.141.0
+# Pinned to the newest releases that work on the pinned base image
+# (alpine 3.24: CPython 3.14, Chromium 156). Dependabot keeps these current.
+#
+# The base image and these pins move together: numpy needs CPython >= 3.12, and
+# selenium 4 is matched to the packaged Chromium/chromedriver.
+EasyProcess==1.1
+fake-useragent==2.2.0
+numpy==2.5.4
+psutil==7.2.2
+pyOpenSSL==26.4.0
+pyvirtualdisplay==3.0
+requests==2.34.2
+selenium==4.52.0
+user-agents==2.2.0
