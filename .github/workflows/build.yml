@@ -24,9 +24,18 @@ jobs:
 
       - name: Work out the image tag
         id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ inputs.tag }}" >> "${GITHUB_OUTPUT}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            case "$DISPATCH_TAG" in
+              '' | *[!0-9A-Za-z._-]*)
+                echo "manual run needs a plain tag, got [$DISPATCH_TAG]" >&2
+                exit 1
+                ;;
+            esac
+            echo "version=$DISPATCH_TAG" >> "${GITHUB_OUTPUT}"
           else
             echo "version=${GITHUB_REF_NAME#v}" >> "${GITHUB_OUTPUT}"
           fi
@@ -48,7 +57,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          # No linux/arm/v7: Alpine has shipped no chromium build for armv7
+          # since 3.11 (chromium 80, 2020). TODO.md records the route back.
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             hvalev/isp-pollution:${{ steps.tag.outputs.version }}

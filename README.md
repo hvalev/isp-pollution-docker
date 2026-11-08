@@ -154,9 +154,13 @@ upstream code and an MIT vendored blocklist; see [NOTICE](NOTICE).
 
 ## Releases
 
-Tags `v*` build and push the multi-arch image (`linux/amd64`, `linux/arm64`,
-`linux/arm/v7`) and update the Docker Hub description. See
-[CHANGELOG.md](CHANGELOG.md).
+Tags `v*` build and push the multi-arch image (`linux/amd64`, `linux/arm64`)
+and update the Docker Hub description. See [CHANGELOG.md](CHANGELOG.md).
+
+32-bit ARM (`linux/arm/v7`) is not built: the image needs Chromium and Alpine
+has shipped no Chromium for armv7 since 3.11, whose Chromium 80 no longer
+renders the current web. A Raspberry Pi 2 on a 32-bit system is the only
+common host left behind — the same machine in 64-bit mode is supported.
 
 The release workflow needs two repository secrets: `DOCKERHUBUNAME` and
 `DOCKERHUBTOKEN`, the latter a Docker Hub personal access token with

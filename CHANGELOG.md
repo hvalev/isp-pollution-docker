@@ -17,6 +17,10 @@ Dated entries, newest first. Each entry is a finished unit of work.
   virtualenv because modern Alpine Python is marked externally managed.
   Domain entropy per page improved from ~1.1 to ~2.0 bits against the previous
   base, because the old Chromium no longer renders current sites.
+- Removed `linux/arm/v7`. Alpine stopped building Chromium for armv7 after
+  3.11 (Chromium 80), so the 3.24 base has no `chromium` package there and the
+  multi-arch build died at `apk add`. The platform was already unusable: no
+  Chromium released for 32-bit ARM since 2020 renders current search pages.
 - Compatibility fixes upstream never made, applied as a patch series that fails
   the build when a patch stops matching: Selenium 4 element lookup and driver
   service, `browserVersion` capability, numpy 2 scalar conversions,

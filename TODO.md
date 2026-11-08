@@ -2,6 +2,18 @@
 
 Dated decisions and deliberately deferred work.
 
+## 2026-11-08 — arm/v7 returns through a Debian variant, not Alpine
+
+Alpine has no `chromium` for armv7 since 3.12, so the image ships amd64 and
+arm64 only. Debian trixie packages `chromium` and `chromium-driver` for armhf,
+so a separate `Dockerfile.debian` built for `linux/arm/v7` and merged into the
+same tag with `docker manifest create` would restore 32-bit ARM. Two conditions:
+Debian Chromium refuses to run as root, so the variant runs as a non-root user
+with the setuid sandbox (or asks the operator for `--cap-add=SYS_ADMIN`), and an
+armv7 host is needed to prove the browser starts — the manifest can be built
+blind but nothing less is a verification. Closes when such a variant builds and
+pollutes on real armv7 hardware.
+
 ## 2026-11-08 — search-engine seeding is degraded, not fixed
 
 The upstream script seeds its link library by searching Google, Bing, Yahoo and
