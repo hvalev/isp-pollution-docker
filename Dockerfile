@@ -73,4 +73,7 @@ ENV GBPM=300 \
 HEALTHCHECK --interval=5m --timeout=15s --start-period=15m --retries=3 \
     CMD ["python3", "-c", "import os,sys,time; p=os.environ.get('HEALTH_FILE','/tmp/isp-data-pollution.health'); sys.exit(0 if os.path.exists(p) and time.time()-os.path.getmtime(p) < 900 else 1)"]
 
-CMD ["sh", "-c", "exec python3 -u /isp-data-pollution.py --gb_per_month \"${GBPM}\" --maxmemory \"${MEM}\""]
+COPY docker-entrypoint.sh /usr/local/bin/isp-pollution
+RUN chmod +x /usr/local/bin/isp-pollution
+
+ENTRYPOINT ["/usr/local/bin/isp-pollution"]

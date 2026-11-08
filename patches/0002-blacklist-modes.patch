@@ -1,0 +1,122 @@
+--- a/isp_data_pollution.py
++++ b/isp_data_pollution.py
+@@ -64,7 +64,12 @@
+ browserdriver_rss_limit_mb = 1024  # Default maximum memory limit of browserdriver (chromedriver) processs (MB)
+ terminal_width = 80  # tty width, standard is 80 chars; add code to adapt later
+ 
+-blacklist_url = 'http://www.shallalist.de/Downloads/shallalist.tar.gz'
++# Shalla Secure Services shut down, so the upstream URL is dead (404; see
++# upstream issue #35). Default to the Internet Archive copy of the last
++# release; override with SHALLA_URL.
++blacklist_url = os.environ.get(
++    'SHALLA_URL',
++    'https://web.archive.org/web/20210502020725if_/http://www.shallalist.de/Downloads/shallalist.tar.gz')
+ # Usage of the Shalla Blacklists:
+ # ===============================
+ #
+@@ -125,6 +130,14 @@
+                     'http://www.fool.com'
+                     ]
+ 
++# --- Docker runtime configuration (see README) ------------------------------
++# BLACKLIST selects where the link filter comes from:
++#   off    no filtering, and no network fetch at startup
++#   local  read a domain list baked into the image (default)
++#   remote download the Shalla and EasyList sources, like upstream does
++blacklist_mode = os.environ.get('BLACKLIST', 'local').strip().lower()
++blacklist_file = os.environ.get('BLACKLIST_FILE', '/etc/isp-data-pollution/blocklist-domains.txt')
++
+ # monkeypatch the read class method in RobotFileParser
+ # many sites will block access to robots.txt without a standard User-Agent header
+ class RobotFileParserUserAgent(robotparser.RobotFileParser):
+@@ -224,7 +237,8 @@
+         self.blacklist_url = blacklist_url
+         self.wordsite_url = wordsite_url
+         self.seed_bias_links = seed_bias_links
+-        self.blacklist = blacklist; self.verbose = verbose
++        self.blacklist_mode = blacklist_mode; self.blacklist_file = blacklist_file
++        self.blacklist = self.blacklist_mode != 'off'; self.verbose = verbose
+         self.timeout = timeout
+         self.diurnal_flag = diurnal_flag
+         self.quit_driver_every_call = quit_driver_every_call
+@@ -394,18 +408,26 @@
+         self.blacklist_domains = set()
+         self.blacklist_urls = set()
+         try:
+-            if self.blacklist:    # download the blacklist or not
++            if not self.blacklist:
++                raise Exception('BLACKLIST=off: no link filter will be applied.')
++            elif self.blacklist_mode == 'local':
++                if self.verbose: print('Reading the local blacklist… ', end='', flush=True)
++                self.get_local_blacklist()
++                if self.verbose: print('Local blacklist done.', flush=True)
++            elif self.blacklist_mode == 'remote':
+                 if self.verbose: print('Downloading the blacklists… ',end='',flush=True)
++                self.get_shalla_blacklist()
++                if self.verbose: print('Shallalist done… ', end='', flush=True)
++                self.get_easylist_blacklist()
++                if self.verbose: print('EasyList done.', flush=True)
+             else:
+-                raise Exception('Skip downloading the blacklist.')
+-            self.get_shalla_blacklist()
+-            if self.verbose: print('Shallalist done… ', end='', flush=True)
+-            self.get_easylist_blacklist()
+-            if self.verbose: print('EasyList done.', flush=True)
++                raise Exception('BLACKLIST must be off, local or remote (got %r).' % self.blacklist_mode)
+         except Exception as e:
+             if self.verbose: print(e)
+-        # Make sure blacklists are not empty
+-        if self.blacklist:
++        # Make sure blacklists are not empty. Only a failed remote download is
++        # fatal: with BLACKLIST=local an unreadable BLACKLIST_FILE means "no
++        # filter", and the polluter keeps working.
++        if self.blacklist and self.blacklist_mode == 'remote':
+             try: # no fully empty collection of blacklists
+                 assert (self.blacklist_domains != set() or self.blacklist_urls != set()) \
+                     and (not update_flag or (blacklist_domains != set() or blacklist_urls != set()))
+@@ -421,6 +443,21 @@
+         # ignore problem urls
+         self.blacklist_urls |= { 'about:blank' }
+ 
++    def get_local_blacklist(self):
++        """Fill the filter from a plain newline-separated domain list (patched)."""
++        try:
++            with open(self.blacklist_file, encoding='utf-8', errors='ignore') as fh:
++                for line in fh:
++                    line = line.strip()
++                    if line and not line.startswith('#'):
++                        self.blacklist_domains.add(line)
++        except OSError as e:
++            warn.warn('Local blacklist %s is unreadable (%s); running without a filter.'
++                      % (self.blacklist_file, e))
++            return
++        if not self.blacklist_domains:
++            warn.warn('Local blacklist %s is empty; running without a filter.' % self.blacklist_file)
++
+     def get_shalla_blacklist(self):
+         # http://stackoverflow.com/questions/18623842/read-contents-tarfile-into-python-seeking-backwards-is-not-allowed
+         tgzstream = urllib.request.urlopen(urllib.request.Request(self.blacklist_url, headers={'User-Agent': self.user_agent}))
+@@ -453,14 +490,19 @@
+ 
+     def get_easylist_blacklist(self):
+         # Malware lists from open source AdBlock and spam404.com lists
+-        malwaredomains_full = 'https://easylist-downloads.adblockplus.org/malwaredomains_full.txt'
+         spam404_com_adblock_list = 'https://raw.githubusercontent.com/Dawsey21/Lists/master/adblock-list.txt'
+         spam404_com_main_blacklist = 'https://raw.githubusercontent.com/Dawsey21/Lists/master/main-blacklist.txt'  # not EasyList format
+-        download_list = list(set([malwaredomains_full, spam404_com_adblock_list, spam404_com_main_blacklist]))
+-        download_parse = { malwaredomains_full: True, spam404_com_adblock_list: True, spam404_com_main_blacklist: False }
++        # easylist-downloads.adblockplus.org/malwaredomains_full.txt is gone (404)
++        download_list = list(set([spam404_com_adblock_list, spam404_com_main_blacklist]))
++        download_parse = { spam404_com_adblock_list: True, spam404_com_main_blacklist: False }
+ 
+         for url in download_list:
+-            resp = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': self.user_agent}))
++            # a single dead source must not discard the ones that still work
++            try:
++                resp = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': self.user_agent}))
++            except Exception as e:
++                warn.warn('Skipping unreachable blacklist source %s (%s)' % (url, e))
++                continue
+             for line in resp:
+                 line = line.decode('utf-8').rstrip()
+                 if download_parse[url]: self.parse_and_filter_rule_urls(line)
