@@ -157,3 +157,9 @@ upstream code and an MIT vendored blocklist; see [NOTICE](NOTICE).
 Tags `v*` build and push the multi-arch image (`linux/amd64`, `linux/arm64`,
 `linux/arm/v7`) and update the Docker Hub description. See
 [CHANGELOG.md](CHANGELOG.md).
+
+The release workflow needs two repository secrets: `DOCKERHUBUNAME` and
+`DOCKERHUBTOKEN`, the latter a Docker Hub personal access token with
+read/write/delete scope — it logs the build in and rewrites the Hub
+description. A tag push builds with the workflow file recorded in that tag,
+so a workflow fix needs the tag moved to the commit that carries it.

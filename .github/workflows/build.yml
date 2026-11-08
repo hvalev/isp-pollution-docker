@@ -56,10 +56,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # dockerhub-description accepts a Docker Hub personal access token in
+      # place of a password, so the same token logs in and updates the
+      # description: DOCKERHUBUNAME plus DOCKERHUBTOKEN are the only secrets
+      # this workflow needs (the token wants read/write/delete scope).
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUBUNAME }}
-          password: ${{ secrets.DOCKERHUBPWD }}
+          password: ${{ secrets.DOCKERHUBTOKEN }}
           repository: hvalev/isp-pollution
           readme-filepath: ./README.md
