@@ -1,14 +1,14 @@
 # isp-pollution
 
-Container that continuously generates fake browsing traffic to your ISP from a
-headless Chromium, so your real history is harder to profile. It packages
-[essandess/isp-data-pollution](https://github.com/essandess/isp-data-pollution)
-with a pinned, patched build. Faux traffic is not anonymity: a determined
-observer can still separate real from fake requests.
-
 [![ci](https://github.com/hvalev/isp-pollution-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/hvalev/isp-pollution-docker/actions/workflows/ci.yml)
 ![Docker Pulls](https://img.shields.io/docker/pulls/hvalev/isp-pollution)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/hvalev/isp-pollution)
+
+Container that continuously generates fake browsing traffic to your ISP from a
+headless Chromium, so your real history is harder to profile. The polluter is
+vendored from [essandess/isp-data-pollution](https://github.com/essandess/isp-data-pollution)
+and maintained here, since upstream stopped changing in 2018. Faux traffic is not
+anonymity: a determined observer can still separate real from fake requests.
 
 ## Run it
 
@@ -16,10 +16,10 @@ observer can still separate real from fake requests.
 docker run -d --network host -e GBPM=300 --name isp-pollution hvalev/isp-pollution:latest
 ```
 
-The traffic is generated from the domains in the upstream script's seed list,
-so `--network host` matters only for matching your real connection's shape.
+The traffic is generated from the domains in the script's seed list, so
+`--network host` matters only for matching your real connection's shape.
 Give the container more memory than `MEM`: the limit applies to the chromedriver
-process, and Python plus Xvfb sit on top of it.
+process, and the Python interpreter sits on top of it.
 
 ```yaml
 services:
@@ -164,7 +164,7 @@ What this repository changed in it:
 | `Local blacklist ... is unreadable; running without a filter` | `BLACKLIST_FILE` is missing or unreadable. Filter is off, pollution continues. |
 | `Empty blacklists! Exiting.` | `BLACKLIST=remote` and every remote source failed. Use `BLACKLIST=local`. |
 | Container `unhealthy` | Restart it: `docker restart isp-pollution`. |
-| Everything looks silent but suspicious | Run with `-g`; the upstream script only prints swallowed exceptions in debug mode. |
+| Everything looks silent but suspicious | Run with `-g`; the script only prints swallowed exceptions in debug mode. |
 
 ## Licensing
 
@@ -181,9 +181,3 @@ and update the Docker Hub description. See [CHANGELOG.md](CHANGELOG.md).
 has shipped no Chromium for armv7 since 3.11, whose Chromium 80 no longer
 renders the current web. A Raspberry Pi 2 on a 32-bit system is the only
 common host left behind — the same machine in 64-bit mode is supported.
-
-The release workflow needs two repository secrets: `DOCKERHUBUNAME` and
-`DOCKERHUBTOKEN`, the latter a Docker Hub personal access token with
-read/write/delete scope — it logs the build in and rewrites the Hub
-description. A tag push builds with the workflow file recorded in that tag,
-so a workflow fix needs the tag moved to the commit that carries it.
