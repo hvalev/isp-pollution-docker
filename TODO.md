@@ -12,12 +12,22 @@ ships `linux/amd64` and `linux/arm64`; a Raspberry Pi in 64-bit mode is covered,
 and 32-bit-only hosts are not coming back. Do not reopen this from the old `arm`
 manifest list on Docker Hub — that belongs to the 2021 images.
 
-## 2026-11-08 — pinned upstream is unmaintained
+## 2026-11-08 — upstream is vendored, not pinned
 
-`UPSTREAM_COMMIT` points at the last upstream commit (2018). Upstream has open
-issues for the dead Shalla list and no release since, so expect fixes to land
-here first. Closes if upstream revives or the script is vendored outright —
-vendoring needs a decision on the GPL/MIT conflict named in `NOTICE`.
+Closed. `isp_data_pollution.py` is in this repository as of 0.5.0, so there is no
+`UPSTREAM_COMMIT` to chase and no patch series to re-apply. Upstream is unmaintained
+(last commit 2018, open issues about the dead Shalla list), so fixes land here.
+The license question that blocked vendoring — an MIT `LICENSE` in upstream's
+repository against a GPL-3.0-or-later header in the file — was resolved by taking
+the more restrictive reading; see `NOTICE`.
+
+## 2026-11-08 — re-vendor if upstream ever revives
+
+Deferred, low priority. If `essandess/isp-data-pollution` ever ships a release
+again, diffing it against the vendored file is a manual job: the patch series
+that used to make that comparison mechanical is gone, and the file has diverged
+(lint, types, scheme-checked fetches). Worth a afternoon only if upstream grows
+something this copy lacks.
 
 ## 2026-11-08 — GitHub Actions stay on mutable version tags
 

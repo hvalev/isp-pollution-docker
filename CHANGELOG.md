@@ -2,6 +2,44 @@
 
 Dated entries, newest first. Each entry is a finished unit of work.
 
+## 0.5.0 — 2026-11-08
+
+- The polluter lives here now. `isp_data_pollution.py` is vendored from upstream
+  commit `99862ab` with the eight compatibility patches folded in, so the build
+  neither clones upstream nor applies a patch series: `patches/` and
+  `UPSTREAM_COMMIT` are gone. The series used to fail the build when upstream
+  drifted; now there is nothing to drift, and the fixes are ordinary reviewed
+  code with a test suite behind them.
+- The repository is GPL-3.0-or-later, the license the vendored script carries.
+  Upstream's repository ships an MIT `LICENSE` for the same file while the file
+  header says GPL-3.0-or-later, so the more restrictive reading is taken; the
+  MIT text is kept at `LICENSES/UPSTREAM-MIT.txt` and `NOTICE` carries the
+  attribution.
+- Owning the file meant fixing it rather than patching around it, and no file is
+  exempted from lint or type checking. Some of the findings were live bugs:
+  `from pyvirtualdisplay import Display` never resolved, so the optional Xvfb
+  path had been dead code since it was written (it now imports the real module,
+  starts only when `Xvfb` exists, and warns instead of dying if a display
+  cannot be had); the link harvesters closed over loop variables, so a deferred
+  read could act on a later element; `pid`, `rss_mb`, `current_url` and `uap`
+  were read on paths where they had never been assigned; `set_url()` was handed
+  bytes; and an unparsable chromedriver version string stopped startup over a
+  check that only prints advice.
+- Every `urlopen()` goes through `open_http()`, which refuses any scheme but
+  http(s). Scraped pages and blacklist feeds supply most of those URLs, so a
+  `file:` target would have been a local file read driven by remote content.
+- Dependencies moved to `uv`: `pyproject.toml` plus a committed `uv.lock`, no
+  `requirements.txt`, and the image installs the same lock the tests run
+  (`uv sync --frozen`), which also takes `py3-pip` out of the build.
+- Tests exist. `tests/test_units.py` covers environment parsing, seed word
+  validation, http(s)-only link filtering, per-domain caps, the heartbeat file
+  and the seeding cooldown without a browser or network. `tools/smoke_test.sh`
+  builds the image, runs it, and proves it is generating traffic: a detached
+  container prints almost nothing, because the per-page progress lines need a
+  terminal, so the test watches the health file instead — measured 1.6 MB in
+  60 s at `GBPM=500` with a fresh health stamp and no tracebacks. CI runs lint,
+  types, unit tests, the image build, and that smoke test.
+
 ## 0.4.2 — 2026-11-08
 
 - A bot-walled seeding search no longer eats the pollute loop. The engines

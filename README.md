@@ -99,46 +99,59 @@ Build arguments:
 | Argument | Default |
 |---|---|
 | `BASE_IMAGE` | `alpine:3.24` |
-| `UPSTREAM_REPOSITORY` | `https://github.com/essandess/isp-data-pollution.git` |
-| `UPSTREAM_COMMIT` | `99862aba74ee4704c5366ac197191ed6ab5f0f13` |
+| `UV_VERSION` | `0.13.7` |
 
-## Patch series
+## Development
 
-`patches/*.patch` are applied to the pinned upstream checkout with `git apply`,
-which fails the build when a patch no longer matches — the previous build used
-`sed -i`, which succeeded silently on nothing. Check the series locally before
-touching `UPSTREAM_COMMIT`:
+[`uv`](https://docs.astral.sh/uv/) manages the environment; `pyproject.toml` and
+`uv.lock` are the single source of truth for dependencies, and the image installs
+from the same lock.
 
 ```sh
-tmp=$(mktemp -d) && git -C "$tmp" init -q
-git clone -q https://github.com/essandess/isp-data-pollution.git "$tmp/src"
-git -C "$tmp/src" checkout -q <new-commit>
-for p in patches/*.patch; do
-    git -C "$tmp/src" apply "$PWD/$p" || { echo "FAILS: $p"; break; }
-done
+uv sync --frozen        # .venv from the lock file
+uv run pytest -q        # unit tests (no browser, no network)
+uv run ruff check .     # lint
+uv run pyright isp_data_pollution.py tests/
+uv add --dev <tool>     # dev-only tools; runtime deps go in pyproject.toml
 ```
 
-| Patch | Purpose |
+Adding a runtime dependency means `uv add <pkg>`, a rebuild, and a commit of both
+`pyproject.toml` and `uv.lock` — the lock is checked in so builds are repeatable.
+
+## The vendored script
+
+`isp_data_pollution.py` is the upstream polluter, vendored from
+[`essandess/isp-data-pollution`](https://github.com/essandess/isp-data-pollution)
+at commit `99862ab` (upstream's last commit; the project is unmaintained). Earlier
+releases cloned it during the build and applied a `patches/` series on top; the
+series is now folded into the file, so the fixes are reviewed as ordinary code and
+a rebuild cannot drift away from an upstream branch.
+
+What this repository changed in it:
+
+| Change | Effect |
 |---|---|
-| `0001-chromium-flags-for-containers` | `no-sandbox`, `disable-dev-shm-usage` for root, small `/dev/shm` |
-| `0002-blacklist-modes` | `BLACKLIST=off\|local\|remote`, live Shalla default, per-source error tolerance |
-| `0003-liveness-heartbeat` | `HEALTH_FILE` tick at the top of the pollute loop |
-| `0004-selenium-4-api` | `find_elements(By.*)`, driver `Service`, `browserVersion` capability |
-| `0005-modern-python-numpy` | `random.sample()` on sets (Python 3.11), numpy 2 scalar conversions, `importlib.util` |
-| `0006-chromedriver-modern-browser` | keep only http(s) links, so `data:`/`blob:` targets never reach the driver |
-| `0007-seed-word-list` | seed words from the vendored list; a fetched list is rejected unless it is word-shaped |
-| `0008-seeding-search-budget` | pause searching after a search overruns `SEED_SEARCH_BUDGET`, so a bot-walled query does not eat the pollute loop |
+| Chromium flags | `no-sandbox`, `disable-dev-shm-usage` for root, small `/dev/shm` |
+| Blacklist modes | `BLACKLIST=off\|local\|remote`, vendored list by default, per-source error tolerance |
+| Liveness heartbeat | `HEALTH_FILE` tick at the top of the pollute loop |
+| Selenium 4 API | `find_elements(By.*)`, driver `Service`, `browserVersion` capability |
+| Modern Python and numpy | `random.sample()` on sets, numpy 2 scalar conversions, `importlib.util` |
+| http(s)-only links | `data:`/`blob:` targets never reach the driver |
+| Seed word list | words from the vendored frequency list; a fetched list is rejected unless it is word-shaped |
+| Seeding search budget | pause searching after a search overruns `SEED_SEARCH_BUDGET`, so a bot-walled query does not eat the pollute loop |
+| Scheme-checked fetches | every `urlopen()` goes through `open_http()`, which refuses anything but http(s) |
 
 ## Move the base image
 
-`BASE_IMAGE`, `requirements.txt`, and the compatibility patches move together:
+`BASE_IMAGE`, `pyproject.toml`/`uv.lock` and the packaged Chromium move together:
 
 1. Pick the base and read its `python3` and `chromium` versions — numpy needs
    CPython ≥ 3.12, and selenium must be current enough for that Chromium.
-2. Update `requirements.txt` to the newest releases; check each has a
-   `musllinux` wheel, otherwise the wheels stage needs a compiler.
-3. Build, then run with `-g` and look for `exception` lines: the script swallows
-   errors without it.
+2. `uv lock --upgrade` and check each dependency still ships a `musllinux`
+   wheel, otherwise the wheels stage needs a compiler.
+3. `uv run pytest -q`, then build and run with `-g` and look for `exception`
+   lines: the script swallows errors without it.
+4. `./tools/smoke_test.sh` before releasing.
 
 ## Troubleshooting
 
@@ -154,8 +167,9 @@ done
 
 ## Licensing
 
-MIT for the packaging in this repository. The image contains GPL-3.0-or-later
-upstream code and an MIT vendored blocklist; see [NOTICE](NOTICE).
+GPL-3.0-or-later. The polluter script this repository builds around is GPL from
+upstream, so the whole repository follows it; see [NOTICE](NOTICE) for attribution
+and for the MIT-licensed vendored data files.
 
 ## Releases
 
