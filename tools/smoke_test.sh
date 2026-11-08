@@ -14,7 +14,7 @@ set -euo pipefail
 
 IMAGE=${IMAGE:-isp-pollution:smoke}
 RUN_SECONDS=${RUN_SECONDS:-180}
-MEASURE_SECONDS=${MEASURE_SECONDS:-60}
+MEASURE_SECONDS=${MEASURE_SECONDS:-90}
 GBPM=${GBPM:-500}
 HEALTH_PATH=${HEALTH_FILE:-/tmp/isp-data-pollution.health}
 NAME="isp-pollution-smoke-$$"
@@ -49,7 +49,7 @@ fi
 echo "guards: bad GBPM and bad BLACKLIST refused"
 
 docker run -d --name "${NAME}" -e "GBPM=${GBPM}" "${IMAGE}" >/dev/null
-echo "running for ${RUN_SECONDS}s to let it seed links…"
+echo "running for ${RUN_SECONDS}s to let it seed links…"  # keep it long: see MEASURE_SECONDS
 sleep "${RUN_SECONDS}"
 
 docker inspect -f '{{.State.Running}}' "${NAME}" | grep -q true || fail "container is not running"
@@ -76,6 +76,6 @@ before, after, seconds = (float(a) for a in sys.argv[1:4])
 mb_per_min = (after - before) / 1024 / 1024 / (seconds / 60)
 gb_per_month = mb_per_min * 43200 / 1024
 print(f"PASS: polluted {(after - before) / 1024 / 1024:.1f} MB in {seconds:g}s "
-      f"({mb_per_min:.1f} MB/min, about {gb_per_month:.0f} GB/month), "
+      f"({mb_per_min:.2f} MB/min, about {gb_per_month:.0f} GB/month), "
       f"health file total {after / 1024 / 1024:.0f} MB")
 PY

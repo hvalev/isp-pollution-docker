@@ -113,6 +113,7 @@ uv run pytest -q        # unit tests (no browser, no network)
 uv run ruff check .     # lint
 uv run pyright isp_data_pollution.py tests/
 uv add --dev <tool>     # dev-only tools; runtime deps go in pyproject.toml
+./tools/smoke_test.sh   # build, run, and prove the container generates traffic
 ```
 
 Adding a runtime dependency means `uv add <pkg>`, a rebuild, and a commit of both

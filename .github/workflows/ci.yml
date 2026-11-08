@@ -69,6 +69,6 @@ jobs:
         env:
           SKIP_BUILD: '1'
           IMAGE: isp-pollution:ci
-          RUN_SECONDS: '90'
-          MEASURE_SECONDS: '45'
+          RUN_SECONDS: '150'
+          MEASURE_SECONDS: '90'
         run: ./tools/smoke_test.sh
