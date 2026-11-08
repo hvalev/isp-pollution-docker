@@ -12,7 +12,33 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Dependencies, lint, types and tests all come from the lock file, the
+      # same lock the image installs from.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-caching: true
+
+      - name: Install the locked environment
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run pyright isp_data_pollution.py tests/
+
+      - name: Test
+        run: uv run pytest -q
+
   build:
+    needs: lint-and-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,3 +61,14 @@ jobs:
           tags: isp-pollution:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
+
+      # Starting is not enough: the image has to actually generate traffic.
+      # The image is already built above, so the script skips its own build.
+      - name: Smoke test
+        env:
+          SKIP_BUILD: '1'
+          IMAGE: isp-pollution:ci
+          RUN_SECONDS: '90'
+          MEASURE_SECONDS: '45'
+        run: ./tools/smoke_test.sh
