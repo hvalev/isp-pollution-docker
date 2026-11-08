@@ -1,0 +1,25 @@
+--- a/isp_data_pollution.py
++++ b/isp_data_pollution.py
+@@ -520,6 +520,14 @@
+             self.words = [ 'FUBAR' ]
+         # if self.debug: print('There are {:d} words.'.format(len(self.words)))
+ 
++    def heartbeat(self):
++        """Touch a liveness file so a container HEALTHCHECK can watch us (patched)."""
++        try:
++            with open(os.environ.get('HEALTH_FILE', '/tmp/isp-data-pollution.health'), 'w') as fh:
++                fh.write('{:.1f} {:.0f}\n'.format(time.time(), self.data_usage))
++        except OSError:
++            pass
++
+     def pollute_forever(self):
+         if self.verbose: print("""Display format:
+ Downloading: website.com; NNNNN links [in library], H(domain)= B bits [entropy]
+@@ -540,6 +548,7 @@
+                 self.exceeded_bandwidth_tasks()
+                 self.random_interval_tasks()
+                 self.every_hour_tasks()
++                self.heartbeat()
+                 time.sleep(self.chi2_mean_std(0.5,0.2))
+             except Exception as e:
+                 if self.debug: print(f'.pollute() exception:\n{e}')

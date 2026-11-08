@@ -1,0 +1,13 @@
+# Nothing here is needed to build the image; keeping it out also avoids
+# invalidating the layer cache when docs change.
+.git
+.github
+.gitignore
+.dockerignore
+README.md
+CHANGELOG.md
+LICENSE
+NOTICE
+docs/
+tools/
+blocklist/*.md

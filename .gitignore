@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# local scratch / test output
+*.log
+docker-compose.local.yml
+blocklist/*.download
+
+# editors
+.idea/
+.vscode/
+*.swp
