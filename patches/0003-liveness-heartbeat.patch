@@ -15,11 +15,14 @@
      def pollute_forever(self):
          if self.verbose: print("""Display format:
  Downloading: website.com; NNNNN links [in library], H(domain)= B bits [entropy]
-@@ -540,6 +548,7 @@
-                 self.exceeded_bandwidth_tasks()
-                 self.random_interval_tasks()
-                 self.every_hour_tasks()
+@@ -531,6 +539,10 @@
+         if self.quit_driver_every_call: self.quit_driver()
+         while True: # pollute forever, pausing only to meet the bandwidth requirement
+             try:
++                # Tick first: exceeded_bandwidth_tasks() below can sleep for
++                # minutes, and the liveness file must not look stale because we
++                # are correctly throttling bandwidth.
 +                self.heartbeat()
-                 time.sleep(self.chi2_mean_std(0.5,0.2))
-             except Exception as e:
-                 if self.debug: print(f'.pollute() exception:\n{e}')
+                 if (not self.diurnal_flag) or self.diurnal_cycle_test():
+                     self.pollute()
+                 else:
