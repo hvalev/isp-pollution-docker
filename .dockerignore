@@ -1,13 +1,16 @@
 # Nothing here is needed to build the image; keeping it out also avoids
-# invalidating the layer cache when docs change.
+# invalidating the layer cache when docs change. LICENSE, NOTICE and LICENSES/
+# are the exception: the image ships them next to the code they cover.
 .git
 .github
 .gitignore
 .dockerignore
 README.md
 CHANGELOG.md
-LICENSE
-NOTICE
+TODO.md
 docs/
 tools/
+tests/
+.venv/
+.python-version
 blocklist/*.md

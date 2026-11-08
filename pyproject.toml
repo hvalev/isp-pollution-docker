@@ -1,0 +1,56 @@
+[project]
+name = "isp-pollution"
+version = "0.5.0"
+description = "Container that generates bandwidth-shaped fake browsing traffic (isp-data-pollution, vendored and maintained here)"
+readme = "README.md"
+# The vendored script is GPL-3.0-or-later and the repository follows it; see NOTICE.
+license = "GPL-3.0-or-later"
+requires-python = ">=3.13"
+dependencies = [
+    # The base image (alpine 3.24: CPython 3.14, Chromium 156) and these pins move
+    # together: numpy needs CPython >= 3.12 and selenium 4 is matched to the
+    # packaged Chromium/chromedriver. Dependabot keeps them current.
+    "EasyProcess==1.1",
+    "fake-useragent==2.2.0",
+    "numpy==2.5.4",
+    "psutil==7.2.2",
+    "pyOpenSSL==26.4.0",
+    "pyvirtualdisplay==3.0",
+    "requests==2.34.2",
+    "selenium==4.52.0",
+    "user-agents==2.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "autopep8>=2.3.2",
+    "pyright>=1.1.414",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.uv]
+# The deliverable is a single script plus a container, not an installable package:
+# uv manages the environment and never builds this project itself.
+package = false
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Mirrors the rule set this repository gets reviewed with (pi-lens' bundled ruff
+# config), so `uv run ruff check` and the review gate agree instead of arguing
+# about two different rule lists. The ignores are that config's documented noise
+# exclusions: E501 (nothing reformats the vendored module, so its upstream line
+# widths stand), B008/SIM108 (style taste), S101 (asserts belong to tests),
+# S311 (non-crypto randomness: the user-agent draw and timing jitter here are
+# deliberate unpredictability, not key material), and S603/S607 (list-argument
+# subprocess, which is the safe form).
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "PIE", "S"]
+ignore = ["E501", "B008", "SIM108", "S101", "S311", "S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+# (none: the vendored module is held to the same rules as our own code)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
