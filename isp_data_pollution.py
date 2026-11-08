@@ -33,7 +33,6 @@ import importlib.util  # 'importlib' alone does not bind .util on modern Python
 import os
 import random
 import re
-import shutil
 import signal
 import sys
 import tarfile
@@ -72,20 +71,12 @@ if importlib.util.find_spec('OpenSSL') is None:
     print(msg)
     warn.warn(msg, stacklevel=2)
 
-# headless Raspberry Pi: pyvirtualdisplay starts an Xvfb display when one is
-# available. The container image runs Chromium truly headless and has no Xvfb,
-# so this stays optional and is skipped when the binary is missing.
-try:
-    from pyvirtualdisplay.display import Display
-except ImportError:
-    Display = None
-
-if Display is not None and shutil.which('Xvfb'):
-    try:
-        display = Display(visible=False, size=(1296, 1018))
-        display.start()
-    except Exception as e:  # an unavailable display must not stop the polluter
-        warn.warn(f'Could not start a virtual display ({e}); continuing headless.', stacklevel=2)
+# No virtual display here, on purpose. Upstream started Xvfb for its visible
+# browser mode; this build always passes `headless`, so Xvfb would only be an
+# idle X server to render into. Measured in one container-per-arm run, starting
+# it cost about 3.5x of the pollute throughput (1.5 MB/min with, 5.5 MB/min
+# without), which is why the import that used to do it never being correct went
+# unnoticed for as long as it did.
 
 # nice this process on UNIX
 if hasattr(os, 'nice'):

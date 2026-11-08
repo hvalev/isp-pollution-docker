@@ -18,13 +18,16 @@ Dated entries, newest first. Each entry is a finished unit of work.
 - Owning the file meant fixing it rather than patching around it, and no file is
   exempted from lint or type checking. Some of the findings were live bugs:
   `from pyvirtualdisplay import Display` never resolved, so the optional Xvfb
-  path had been dead code since it was written (it now imports the real module,
-  starts only when `Xvfb` exists, and warns instead of dying if a display
-  cannot be had); the link harvesters closed over loop variables, so a deferred
-  read could act on a later element; `pid`, `rss_mb`, `current_url` and `uap`
-  were read on paths where they had never been assigned; `set_url()` was handed
-  bytes; and an unparsable chromedriver version string stopped startup over a
-  check that only prints advice.
+  path had been dead code since it was written. Repairing it made the container
+  start an X server that headless Chromium does not use, and that cost about
+  three and a half times the throughput — 1.5 MB/min with it, 5.5 MB/min without,
+  measured with one container per arm in the same window — so the path is gone
+  along with `pyvirtualdisplay`, `EasyProcess` and the `xvfb` package; the link
+  harvesters closed over loop variables, so a deferred read could act on a later
+  element; `pid`, `rss_mb`, `current_url` and `uap` were read on paths where they
+  had never been assigned; `set_url()` was handed bytes; and an unparsable
+  chromedriver version string stopped startup over a check that only prints
+  advice.
 - Every `urlopen()` goes through `open_http()`, which refuses any scheme but
   http(s). Scraped pages and blacklist feeds supply most of those URLs, so a
   `file:` target would have been a local file read driven by remote content.
@@ -36,9 +39,8 @@ Dated entries, newest first. Each entry is a finished unit of work.
   and the seeding cooldown without a browser or network. `tools/smoke_test.sh`
   builds the image, runs it, and proves it is generating traffic: a detached
   container prints almost nothing, because the per-page progress lines need a
-  terminal, so the test watches the health file instead — measured 1.6 MB in
-  60 s at `GBPM=500` with a fresh health stamp and no tracebacks. CI runs lint,
-  types, unit tests, the image build, and that smoke test.
+  terminal, so the test watches the health file instead. CI runs lint, types,
+  unit tests, the image build, and that smoke test.
 
 ## 0.4.2 — 2026-11-08
 

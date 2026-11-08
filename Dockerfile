@@ -46,8 +46,9 @@ LABEL org.opencontainers.image.title="isp-pollution" \
       org.opencontainers.image.source="https://github.com/hvalev/isp-pollution-docker" \
       org.opencontainers.image.upstream="https://github.com/essandess/isp-data-pollution"
 
+# No xvfb: the browser always runs headless (see the note in
+# isp_data_pollution.py), so an X server would be idle weight.
 RUN apk add --no-cache \
-        xvfb \
         tzdata \
         python3 \
         chromium \
