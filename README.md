@@ -123,6 +123,7 @@ done
 | `0004-selenium-4-api` | `find_elements(By.*)`, driver `Service`, `browserVersion` capability |
 | `0005-modern-python-numpy` | `random.sample()` on sets (Python 3.11), numpy 2 scalar conversions, `importlib.util` |
 | `0006-chromedriver-modern-browser` | keep only http(s) links, so `data:`/`blob:` targets never reach the driver |
+| `0007-seed-word-list` | seed words from the vendored list; a fetched list is rejected unless it is word-shaped |
 
 ## Move the base image
 

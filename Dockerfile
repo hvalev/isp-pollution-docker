@@ -66,6 +66,11 @@ COPY --from=patcher /src/isp_data_pollution.py /isp-data-pollution.py
 # the code it covers (see NOTICE).
 COPY --from=patcher /src/LICENSE /usr/share/licenses/isp-data-pollution/UPSTREAM-LICENSE
 COPY blocklist/blocklist-domains.txt /etc/isp-data-pollution/blocklist-domains.txt
+# Seed words for the search queries. Baked in because the dictionary URL the
+# upstream script fetches is no longer reliable (404 to a plain client, bot
+# challenge to a browser user agent) and whatever it returned became the word
+# list. See patches/0007-seed-word-list.patch.
+COPY seedwords/seed-words.txt /etc/isp-data-pollution/seed-words.txt
 COPY docker-entrypoint.sh /usr/local/bin/isp-pollution
 RUN chmod +x /usr/local/bin/isp-pollution
 
@@ -78,6 +83,7 @@ ENV GBPM=300 \
     MEM=2048 \
     BLACKLIST=local \
     BLACKLIST_FILE=/etc/isp-data-pollution/blocklist-domains.txt \
+    SEED_WORDS_FILE=/etc/isp-data-pollution/seed-words.txt \
     HEALTH_FILE=/tmp/isp-data-pollution.health \
     CHROMEDRIVER_PATH=/usr/bin/chromedriver \
     TZ=UTC
