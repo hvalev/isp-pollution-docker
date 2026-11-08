@@ -60,6 +60,6 @@ jobs:
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUBUNAME }}
-          password: ${{ secrets.DOCKERHUBPASSWORD }}
+          password: ${{ secrets.DOCKERHUBPWD }}
           repository: hvalev/isp-pollution
           readme-filepath: ./README.md

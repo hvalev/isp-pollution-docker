@@ -110,7 +110,9 @@ touching `UPSTREAM_COMMIT`:
 tmp=$(mktemp -d) && git -C "$tmp" init -q
 git clone -q https://github.com/essandess/isp-data-pollution.git "$tmp/src"
 git -C "$tmp/src" checkout -q <new-commit>
-for p in patches/*.patch; do git -C "$tmp/src" apply --check "$PWD/$p" || echo "FAILS: $p"; done
+for p in patches/*.patch; do
+    git -C "$tmp/src" apply "$PWD/$p" || { echo "FAILS: $p"; break; }
+done
 ```
 
 | Patch | Purpose |
