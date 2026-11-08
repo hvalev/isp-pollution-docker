@@ -62,6 +62,9 @@ RUN apk add --no-cache \
 
 COPY --from=wheels /opt/venv /opt/venv
 COPY --from=patcher /src/isp_data_pollution.py /isp-data-pollution.py
+# The upstream script's own header claims GPL-3.0+; ship its license text with
+# the code it covers (see NOTICE).
+COPY --from=patcher /src/LICENSE /usr/share/licenses/isp-data-pollution/UPSTREAM-LICENSE
 COPY blocklist/blocklist-domains.txt /etc/isp-data-pollution/blocklist-domains.txt
 COPY docker-entrypoint.sh /usr/local/bin/isp-pollution
 RUN chmod +x /usr/local/bin/isp-pollution
