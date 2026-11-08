@@ -2,6 +2,24 @@
 
 Dated entries, newest first. Each entry is a finished unit of work.
 
+## 0.4.2 — 2026-11-08
+
+- A bot-walled seeding search no longer eats the pollute loop. The engines
+  headless traffic is bot-walled, and while the link library is thin `pollute()`
+  buys a seeding search on every iteration — paying a chromedriver hang and a
+  driver restart before reaching the page it already had. A search that takes
+  longer than `SEED_SEARCH_BUDGET` (20 s) now pauses further searching for
+  `SEED_SEARCH_COOLDOWN` (300 s) and pollution continues from the library
+  (`patches/0008-seeding-search-budget.patch`); both knobs are validated at
+  startup like the rest.
+- Throughput against `0.4.1`, both containers on the same network for the same
+  10 minutes at `GBPM=500`: page loads 5.8/min → 13.9/min, data polluted
+  2.1 MB/min → 8.3 MB/min, chromedriver hangs 18 → 4, domain entropy 3.0 →
+  4.9 bits. A 25-minute run held 66-83 pages per 5 minutes, grew the link
+  library from 3.4k to 13.7k links, and averaged 5.7 bits of domain entropy —
+  past warm-up the library stays above the seeding threshold, so searching is
+  barely needed at all.
+
 ## 0.4.1 — 2026-11-08
 
 - Search seeding has a word list again. The dictionary URL the upstream script

@@ -43,6 +43,9 @@ services:
 | `MEM` | `2048` | chromedriver memory limit in MB, clamped to 256–4096. The driver is restarted when it exceeds it; `0` restarts it after every link. |
 | `BLACKLIST` | `local` | Link filter source: `off`, `local`, or `remote` (see below). |
 | `BLACKLIST_FILE` | `/etc/isp-data-pollution/blocklist-domains.txt` | Domain list used by `BLACKLIST=local`, one domain per line, `#` comments. |
+| `SEED_WORDS_FILE` | `/etc/isp-data-pollution/seed-words.txt` | Words the seeder turns into search queries, one per line. Falls back to the remote dictionary if unreadable. |
+| `SEED_SEARCH_BUDGET` | `20` | Seconds a seeding search may take before further searching is paused. |
+| `SEED_SEARCH_COOLDOWN` | `300` | Seconds of no searching after a seeding search overruns its budget. |
 | `SHALLA_URL` | Internet Archive copy | Tarball fetched by `BLACKLIST=remote`. |
 | `CHROMEDRIVER_PATH` | `/usr/bin/chromedriver` | Driver binary. Empty lets Selenium Manager resolve it. |
 | `HEALTH_FILE` | `/tmp/isp-data-pollution.health` | Touched once per pollute loop; the healthcheck reads its mtime. |
@@ -124,6 +127,7 @@ done
 | `0005-modern-python-numpy` | `random.sample()` on sets (Python 3.11), numpy 2 scalar conversions, `importlib.util` |
 | `0006-chromedriver-modern-browser` | keep only http(s) links, so `data:`/`blob:` targets never reach the driver |
 | `0007-seed-word-list` | seed words from the vendored list; a fetched list is rejected unless it is word-shaped |
+| `0008-seeding-search-budget` | pause searching after a search overruns `SEED_SEARCH_BUDGET`, so a bot-walled query does not eat the pollute loop |
 
 ## Move the base image
 
