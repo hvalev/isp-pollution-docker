@@ -14,15 +14,26 @@ armv7 host is needed to prove the browser starts — the manifest can be built
 blind but nothing less is a verification. Closes when such a variant builds and
 pollutes on real armv7 hardware.
 
-## 2026-11-08 — search-engine seeding is degraded, not fixed
+## 2026-11-08 — search-engine seeding can starve traffic, not just slow it
 
-The upstream script seeds its link library by searching Google, Bing, Yahoo and
-DuckDuckGo for random words harvested from pages it has already visited. Those
-engines now bot-wall headless traffic, so a share of those navigations time out
-and chromedriver restarts. Traffic still flows from the bias list and from
-harvested links, so this costs throughput rather than correctness. Closes when
-the seeding path is replaced (for example friendlier endpoints, or dropping
-search seeding in favour of the vendored domain list) — `patches/` is the place.
+`pollute()` re-runs the whole seeding pass whenever the link library holds
+fewer than 2000 links, and a pass is roughly 15 searches with 20 s timeouts.
+Google, Bing, Yahoo and DuckDuckGo all bot-wall headless traffic now, so on an
+unlucky draw a pass costs minutes instead of seconds. Measured on `0.4.0`
+over 7 minutes at `GBPM=500`: 19 seeding searches, 15 chromedriver hangs, one
+page fetched, zero `POLLUTING` lines — the container stayed `healthy` because
+the heartbeat grace is 15 minutes and the first tick happened on entry to the
+loop. A run that pulls a good seed (for example a real word rather than an
+inline script fragment) escapes into steady pollution in about 5 minutes, so
+the behaviour is bimodal, not uniformly slow.
+
+Three fixes, in increasing order of reach: give `seed_links()` a wall-clock
+budget so the pollute loop always proceeds; reject harvested "words" that are
+not word-shaped, since modern pages feed the seeder minified JavaScript and
+CSS as search terms; and replace the dead FreeBSD dictionary URL
+(`wordsite_url`) with a vendored word list, which is also what makes the
+first seeding pass predictable. `patches/` is the place; the vendored list
+would ride in next to `blocklist/` with the same provenance header.
 
 ## 2026-11-08 — pinned upstream is unmaintained
 
