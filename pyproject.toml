@@ -11,7 +11,7 @@ dependencies = [
     # together: numpy needs CPython >= 3.12 and selenium 4 is matched to the
     # packaged Chromium/chromedriver. Dependabot keeps them current.
     "fake-useragent==2.2.0",
-    "numpy==2.5.4",
+    "numpy==2.5.5",
     "psutil==7.2.2",
     "pyOpenSSL==26.4.0",
     "requests==2.34.2",
